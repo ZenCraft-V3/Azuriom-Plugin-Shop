@@ -172,7 +172,9 @@ class StripeMethod extends PaymentMethod
                 return response()->json(['status' => 'unknown_subscription'], 400);
             }
 
-            $subscription->expire();
+            //ZENCRAFT START
+            //$subscription->expire(); - This is not needed as the subscription has been cancelled but will be kept until the end of the period
+            //ZENCRAFT END
 
             return response()->noContent();
         }
