@@ -17,7 +17,10 @@
 
             @auth
                 @if($package->isSubscription())
-                    @if($package->isUserSubscribed())
+                    // ZENCRAFT START
+                    // OLD CONDITION: @if($package->isUserSubscribed())
+                    @if($package->isUserHasCategorySubscription())
+                    // ZENCRAFT END
                         <a href="{{ route('shop.profile') }}" class="btn btn-primary">
                             {{ trans('shop::messages.actions.manage') }}
                         </a>

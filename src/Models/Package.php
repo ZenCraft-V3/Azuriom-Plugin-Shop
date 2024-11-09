@@ -175,6 +175,25 @@ class Package extends Model implements Buyable
         return Str::after($this->billing_period ?? '', ' ');
     }
 
+    //ZENCRAFT START
+    // Check if the user has an active subscription on a package of the same category
+    public function isUserHasCategorySubscription(?User $user = null)
+    {
+        $have_subscription = false;
+        foreach($this->category->packages as $pack){
+            if($pack->isSubscription()){
+                if($pack->subscriptions()
+                ->whereBelongsTo($user ?? auth()->user())
+                ->scopes('active')
+                ->exists()){
+                    $have_subscription = true;
+                }
+            }
+        }
+        return $have_subscription;
+    }
+    //ZENCRAFT END
+
     public function isUserSubscribed(?User $user = null)
     {
         if (! $this->isSubscription()) {
