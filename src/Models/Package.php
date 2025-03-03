@@ -420,8 +420,10 @@ class Package extends Model implements Buyable
         }
     }
 
-    public function expire(PaymentItem $item): void
+    public function expire(PaymentItem $item, string $trigger = 'expiration'): void
     {
+        $this->dispatchCommands($trigger, $item);
+
         if ($this->expiredRole === null || $this->expiredRole->is_admin) {
             return;
         }
@@ -445,16 +447,25 @@ class Package extends Model implements Buyable
     {
         $user = $item->payment->user;
 
-        $commandsByServer = collect($this->commands)
+        $serverCommands = collect($this->commands)
             ->merge(($json = setting('shop.commands')) ? json_decode($json, true) : [])
             ->filter(fn (mixed $command) => is_array($command))
             ->filter(fn (array $command) => $command['trigger'] === $trigger)
-            ->groupBy('server');
+            ->map(function (array $command) use ($item) {
+                $server = $command['server'];
 
-        $servers = Server::findMany($commandsByServer->keys());
+                if (! is_numeric($server)) {
+                    $command['server'] = Arr::get($item->variables ?? [], $server);
+                }
+
+                return $command;
+            })
+            ->filter(fn (array $command) => $command['server'] !== null);
+
+        $servers = Server::findMany($serverCommands->pluck('server')->unique());
 
         foreach ($servers as $server) {
-            $commands = $commandsByServer[$server->id];
+            $commands = $serverCommands->where('server', $server->id);
 
             $onlineCommands = $this->mapCommands($commands, true, $item);
             $offlineCommands = $this->mapCommands($commands, false, $item);
@@ -471,9 +482,13 @@ class Package extends Model implements Buyable
 
     protected function mapCommands(Collection $commands, bool $onlineOnly, PaymentItem $item): array
     {
-        $commands = $commands->filter(fn (array $command) => ((bool) $command['require_online']) === $onlineOnly);
+        return $commands->filter(fn (array $command) => ((bool) $command['require_online']) === $onlineOnly)
+            ->flatMap(function (array $command) use ($item) {
+                $ignoreQuantity = $command['ignore_quantity'] ?? false;
 
-        return $commands->pluck('commands')
+                return $ignoreQuantity ? [$command] : array_fill(0, $item->quantity, $command);
+            })
+            ->pluck('commands')
             ->flatten()
             ->map(fn (string $command) => str_replace([
                 '{quantity}', '{package_id}', '{package_name}', '{price}', '{transaction_id}',
@@ -481,7 +496,6 @@ class Package extends Model implements Buyable
                 $item->quantity, $this->id, $this->name, $item->price, $item->payment->transaction_id,
             ], $command))
             ->map(fn (string $command) => $item->replaceVariables($command))
-            ->flatMap(fn (string $command) => array_fill(0, $item->quantity, $command))
             ->all();
     }
 }

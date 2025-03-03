@@ -9,6 +9,7 @@ use Azuriom\Plugin\Shop\Models\Package;
 use Azuriom\Plugin\Shop\Models\Payment;
 use Azuriom\Plugin\Shop\Models\Subscription;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 
 abstract class PaymentMethod
@@ -258,7 +259,7 @@ abstract class PaymentMethod
 
         $payment->update(['status' => $isChargeback ? 'chargeback' : 'refunded']);
 
-        $payment->dispatchCommands($isChargeback ? 'chargeback' : 'refund');
+        $payment->revoke($isChargeback ? 'chargeback' : 'refund');
 
         if (($webhook = setting('shop.webhook')) !== null) {
             rescue(fn () => $payment->createRefundDiscordWebhook($isChargeback)->send($webhook));
@@ -275,11 +276,12 @@ abstract class PaymentMethod
         return to_route('shop.cart.index')->with('error', trans('shop::messages.payment.error'));
     }
 
-    protected function getPurchaseDescription(int $id): string
+    protected function getPurchaseDescription(Payment|int $payment): string
     {
         return trans('shop::messages.payment.info', [
-            'id' => $id,
+            'id' => is_int($payment) ? $payment : $payment->id,
             'website' => site_name(),
+            'items' => is_int($payment) ? '...' : Str::limit($payment->items->pluck('name')->implode(', '), 100),
         ]);
     }
 
