@@ -68,11 +68,14 @@ class StripeMethod extends PaymentMethod
 
         $session = Session::create([
             'mode' => 'payment',
+            'billing_address_collection' => 'required',
             'customer_email' => $payment->user->email,
             'line_items' => $items->all(),
+            'consent_collection' => ['terms_of_service' => 'required'],
             'success_url' => str_replace('%id%', '{CHECKOUT_SESSION_ID}', $successUrl),
             'cancel_url' => route('shop.cart.index'),
             'client_reference_id' => $payment->id,
+            'invoice_creation' => ['enabled' => true],
             'discounts' => $coupon ? [['coupon' => $coupon->id]] : [],
         ]);
 
@@ -87,6 +90,7 @@ class StripeMethod extends PaymentMethod
 
         $session = Session::create([
             'mode' => 'subscription',
+            'billing_address_collection' => 'required',
             'customer_email' => $user->email,
             'line_items' => [
                 [
@@ -106,8 +110,10 @@ class StripeMethod extends PaymentMethod
                     'quantity' => 1,
                 ],
             ],
+            'consent_collection' => ['terms_of_service' => 'required'],
             'success_url' => str_replace('%id%', '{CHECKOUT_SESSION_ID}', $successUrl),
             'cancel_url' => route('shop.categories.show', $package->category),
+            'invoice_creation' => ['enabled' => true],
             'metadata' => ['user' => $user->id, 'package' => $package->id],
         ]);
 
