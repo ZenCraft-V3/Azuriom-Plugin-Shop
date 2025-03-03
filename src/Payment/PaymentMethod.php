@@ -51,6 +51,16 @@ abstract class PaymentMethod
         throw new InvalidArgumentException('This payment method does not support subscriptions.');
     }
 
+    /**
+     * Manage an existing subscription by redirecting to a billing portal.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function manage(Subscription $subscription)
+    {
+        throw new InvalidArgumentException('This payment method does not support billing portal management.');
+    }
+
     public function cancelSubscription(Subscription $subscription): void
     {
         throw new InvalidArgumentException('This payment method does not support subscriptions.');

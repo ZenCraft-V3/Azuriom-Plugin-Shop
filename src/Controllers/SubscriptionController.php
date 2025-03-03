@@ -50,6 +50,32 @@ class SubscriptionController extends Controller
         ]);
     }
 
+    public function manage(Request $request, Subscription $subscription)
+    {
+        abort_if(! $subscription->user->is($request->user()), 403);
+
+        if ($subscription->isWithSiteMoney()) {
+            return redirect()->route('shop.profile')
+                ->with('error', trans('shop::messages.subscriptions.no_manage'));
+        }
+
+        $gateway = Gateway::firstWhere('type', $subscription->gateway_type);
+
+        if (! $gateway) {
+            return redirect()->route('shop.profile')
+                ->with('error', trans('shop::messages.subscriptions.gateway_not_found'));
+        }
+
+        try {
+            return $gateway->paymentMethod()->manage($subscription);
+        } catch (\Exception $e) {
+            report($e);
+
+            return redirect()->route('shop.profile')
+                ->with('error', trans('shop::messages.subscriptions.manage_error'));
+        }
+    }
+
     public function subscribe(Request $request, Package $package, Gateway $gateway)
     {
         abort_if(! $gateway->is_enabled || ! $package->isSubscription(), 403);

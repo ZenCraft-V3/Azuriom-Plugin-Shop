@@ -83,15 +83,21 @@
                                 <td>{{ format_date($subscription->created_at) }}</td>
                                 <td>{{ format_date($subscription->ends_at) }}</td>
                                 <td>
-                                    @if($subscription->isActive() && ! $subscription->isCanceled())
-                                        <form action="{{ route('shop.subscriptions.destroy', $subscription) }}" method="POST">
-                                            @method('DELETE')
-                                            @csrf
+                                    @if($subscription->isActive())
+                                        @if($subscription->isWithSiteMoney() && ! $subscription->isCanceled())
+                                            <form action="{{ route('shop.subscriptions.destroy', $subscription) }}" method="POST">
+                                                @method('DELETE')
+                                                @csrf
 
-                                            <button type="submit" class="btn btn-danger btn-sm">
-                                                <i class="bi bi-x-circle"></i> {{ trans('messages.actions.cancel') }}
-                                            </button>
-                                        </form>
+                                                <button type="submit" class="btn btn-danger btn-sm">
+                                                    <i class="bi bi-x-circle"></i> {{ trans('messages.actions.cancel') }}
+                                                </button>
+                                            </form>
+                                        @elseif(! $subscription->isWithSiteMoney())
+                                            <a href="{{ route('shop.subscriptions.manage', $subscription) }}" class="btn btn-primary btn-sm">
+                                                <i class="bi bi-gear"></i> {{ trans('shop::messages.actions.manage') }}
+                                            </a>
+                                        @endif
                                     @endif
                                 </td>
                             </tr>

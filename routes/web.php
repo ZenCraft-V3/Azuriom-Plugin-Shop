@@ -70,6 +70,7 @@ Route::prefix('subscriptions')->name('subscriptions.')->group(function () {
     });
 
     Route::delete('/{subscription}', [SubscriptionController::class, 'cancel'])->middleware('auth')->name('destroy');
+    Route::get('/{subscription}/manage', [SubscriptionController::class, 'manage'])->middleware('auth')->name('manage');
 });
 
 Route::prefix('payments')->name('payments.')->group(function () {

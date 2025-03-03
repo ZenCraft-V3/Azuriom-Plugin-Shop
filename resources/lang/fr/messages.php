@@ -50,6 +50,7 @@ return [
         'subscribe' => 'S\'abonner',
         'manage' => 'Gérer l\'abonnement',
         'move' => 'Déplacer',
+        'manage' => 'Gérer'
     ],
 
     'goal' => [

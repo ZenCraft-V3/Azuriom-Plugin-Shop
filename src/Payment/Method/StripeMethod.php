@@ -17,6 +17,7 @@ use Stripe\Exception\SignatureVerificationException;
 use Stripe\Invoice;
 use Stripe\Stripe;
 use Stripe\Subscription as StripeSubscription;
+use Stripe\BillingPortal\Session as StripeBillingSession;
 use Stripe\Webhook;
 
 class StripeMethod extends PaymentMethod
@@ -111,6 +112,20 @@ class StripeMethod extends PaymentMethod
         ]);
 
         return redirect()->away($session->url);
+    }
+
+    public function manage(Subscription $subscription)
+    {
+        $this->setup();
+
+        $stripeSub = StripeSubscription::retrieve($subscription->subscription_id);
+
+        $billingPortal = StripeBillingSession::create([
+            'customer' => $stripeSub->customer,
+            'return_url' => route('shop.profile'),
+        ]);
+
+        return redirect()->away($billingPortal->url);
     }
 
     public function cancelSubscription(Subscription $subscription): void
