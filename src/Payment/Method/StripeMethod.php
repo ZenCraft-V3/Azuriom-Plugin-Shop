@@ -113,7 +113,6 @@ class StripeMethod extends PaymentMethod
             'consent_collection' => ['terms_of_service' => 'required'],
             'success_url' => str_replace('%id%', '{CHECKOUT_SESSION_ID}', $successUrl),
             'cancel_url' => route('shop.categories.show', $package->category),
-            'invoice_creation' => ['enabled' => true],
             'metadata' => ['user' => $user->id, 'package' => $package->id],
         ]);
 
