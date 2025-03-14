@@ -19,6 +19,7 @@ use Stripe\Stripe;
 use Stripe\Subscription as StripeSubscription;
 use Stripe\BillingPortal\Session as StripeBillingSession;
 use Stripe\Webhook;
+use Carbon\Carbon;
 
 class StripeMethod extends PaymentMethod
 {
@@ -173,6 +174,7 @@ class StripeMethod extends PaymentMethod
             $subscription = Subscription::where('subscription_id', $subscriptionId)->firstOrFail();
 
             if ($invoice->payment_intent !== null) {
+                $this->handleSubscriptionDataUpdate($subscription, $invoice);
                 $this->renewSubscription($subscription, $invoice->payment_intent);
             }
 
@@ -199,6 +201,27 @@ class StripeMethod extends PaymentMethod
         return response()->json(['status' => 'unknown_event']);
     }
 
+    // ZenCraft START
+    protected function handleSubscriptionDataUpdate(Subscription $subscription, Invoice $invoice): void
+    {
+        // Update subscription data after renewal
+        // This ensures our local subscription record aligns with Stripe's data
+        $subscription->price = $invoice->total; // Make sure to update the price
+
+        // Retrieve the Stripe subscription to check for trial period details
+        $stripeSub = StripeSubscription::retrieve($subscription->subscription_id);
+        $trialEnd = $stripeSub->trial_end;
+
+        // Handle trial period if present
+        if ($trialEnd !== null && $trialEnd > time()) { // Check if there is a trial
+            // Update the local subscription end date to match the trial end date
+            // This ensures the subscription won't expire before the trial ends
+            $trialEndTimeStamp = Carbon::createFromTimestamp($trialEnd)->subMonth();
+            $subscription->ends_at = $trialEndTimeStamp; // Update the end
+        }
+    }
+    // ZenCraft END
+
     protected function processCompletedCheckout(Session $session)
     {
         if ($session->mode === 'subscription') {
@@ -210,7 +233,11 @@ class StripeMethod extends PaymentMethod
 
             $sub = $this->createSubscription($user, $package, $session->subscription, $total, $currency);
 
-            return $this->renewSubscription($sub, $invoice->payment_intent, true);
+            //ZenCraft START
+            $this->handleSubscriptionDataUpdate($sub, $invoice);
+            $paymentIntentId = $invoice->payment_intent ?? "trial-" . $session->subscription; // If the invoice has no payment intent, it is a trial
+            return $this->renewSubscription($sub, $paymentIntentId, true);
+            //ZenCraft END
         }
 
         $payment = Payment::find($session->client_reference_id);
