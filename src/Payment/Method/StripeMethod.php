@@ -206,7 +206,8 @@ class StripeMethod extends PaymentMethod
     {
         // Update subscription data after renewal
         // This ensures our local subscription record aligns with Stripe's data
-        $subscription->price = $invoice->total; // Make sure to update the price
+        $currency = $invoice->currency;
+        $subscription->price = $this->retrieveDecimalAmount($invoice->total, $currency); // Make sure to update the price
 
         // Retrieve the Stripe subscription to check for trial period details
         $stripeSub = StripeSubscription::retrieve($subscription->subscription_id);
