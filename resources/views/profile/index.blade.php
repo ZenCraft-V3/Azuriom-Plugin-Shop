@@ -51,15 +51,16 @@
                     <table class="table">
                         <thead class="table-dark">
                         <tr>
-                            <th scope="col">#</th>
+{{--                            <th scope="col">#</th>--}}
+                            <th scope="col">{{ trans('messages.fields.date') }}</th>
                             <th scope="col">{{ trans('shop::messages.fields.price') }}</th>
-                            @if(! use_site_money())
-                                <th scope="col">{{ trans('messages.fields.type') }}</th>
-                            @endif
+{{--                            @if(! use_site_money())--}}
+{{--                                <th scope="col">{{ trans('messages.fields.type') }}</th>--}}
+{{--                            @endif--}}
                             <th scope="col">{{ trans('shop::messages.fields.package') }}</th>
                             <th scope="col">{{ trans('messages.fields.status') }}</th>
-                            <th scope="col">{{ trans('shop::messages.fields.subscription_id') }}</th>
-                            <th scope="col">{{ trans('messages.fields.date') }}</th>
+{{--                            <th scope="col">{{ trans('shop::messages.fields.subscription_id') }}</th>--}}
+
                             <th scope="col">{{ trans('shop::messages.fields.renewal_date') }}</th>
                             <th scope="col">{{ trans('messages.fields.action') }}</th>
                         </tr>
@@ -68,20 +69,28 @@
 
                         @foreach($subscriptions as $subscription)
                             <tr>
-                                <th scope="row">{{ $subscription->id }}</th>
+{{--                                <th scope="row">{{ $subscription->id }}</th>--}}
+                                <td>{{ format_date($subscription->created_at) }}</td>
                                 <td>{{ $subscription->formatPrice() }}</td>
-                                @if(! use_site_money())
-                                    <td>{{ $subscription->getTypeName() }}</td>
-                                @endif
+{{--                                @if(! use_site_money())--}}
+{{--                                    <td>{{ $subscription->getTypeName() }}</td>--}}
+{{--                                @endif--}}
                                 <td>{{ $subscription->package?->name ?? trans('messages.unknown') }}</td>
                                 <td>
                                     <span class="badge bg-{{ $subscription->statusColor() }}">
                                         {{ trans('shop::admin.subscriptions.status.'.$subscription->status) }}
                                     </span>
                                 </td>
-                                <td>{{ $subscription->subscription_id ?? trans('messages.unknown') }}</td>
-                                <td>{{ format_date($subscription->created_at) }}</td>
-                                <td>{{ format_date($subscription->ends_at) }}</td>
+{{--                                <td>{{ $subscription->subscription_id ?? trans('messages.unknown') }}</td>--}}
+                                <td>
+                                    @if($subscription->isCanceled())
+                                        <span class="badge bg-{{ $subscription->statusColor() }}">
+                                            {{ "Résiliation le ".format_date($subscription->ends_at) }}
+                                        </span>
+                                    @else
+                                        {{ format_date($subscription->ends_at) }}
+                                    @endif
+                                </td>
                                 <td>
                                     @if($subscription->isActive())
                                         @if($subscription->isWithSiteMoney() && ! $subscription->isCanceled())

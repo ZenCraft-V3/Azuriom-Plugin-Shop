@@ -104,7 +104,8 @@ class Subscription extends Model
     public function statusColor(): string
     {
         return match ($this->status) {
-            'canceled', 'expired' => 'warning',
+            'expired' => 'danger',
+            'canceled' => 'warning',
             'active' => 'success',
             default => 'secondary',
         };
