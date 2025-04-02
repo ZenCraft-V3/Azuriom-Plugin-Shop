@@ -11,19 +11,21 @@
                 <table class="table">
                     <thead class="table-dark">
                     <tr>
-                        <th scope="col">#</th>
+{{--                        <th scope="col">#</th>--}}
+                        <th scope="col">{{ trans('messages.fields.date') }}</th>
                         <th scope="col">{{ trans('shop::messages.fields.price') }}</th>
                         <th scope="col">{{ trans('messages.fields.type') }}</th>
                         <th scope="col">{{ trans('messages.fields.status') }}</th>
                         <th scope="col">{{ trans('shop::messages.fields.payment_id') }}</th>
-                        <th scope="col">{{ trans('messages.fields.date') }}</th>
+                        <th scope="col">{{ trans('messages.fields.action') }}</th>
                     </tr>
                     </thead>
                     <tbody>
 
                     @foreach($payments as $payment)
                         <tr>
-                            <th scope="row">{{ $payment->id }}</th>
+{{--                            <th scope="row">{{ $payment->id }}</th>--}}
+                            <td>{{ format_date($payment->created_at, true) }}</td>
                             <td>{{ $payment->formatPrice() }}</td>
                             <td>{{ $payment->getTypeName() }}</td>
                             <td>
@@ -32,7 +34,13 @@
                                 </span>
                             </td>
                             <td>{{ $payment->transaction_id ?? trans('messages.unknown') }}</td>
-                            <td>{{ format_date($payment->created_at, true) }}</td>
+                            <td>
+                                @if($payment->transaction_id !== null && Str::startsWith($payment->transaction_id, 'pi_'))
+                                    <a href="{{ route('shop.payments.receipt', $payment) }}" class="btn btn-primary btn-sm" target="_blank">
+                                        <i class="bi bi-gear"></i> {{ trans('shop::messages.actions.manage') }}
+                                    </a>
+                                @endif
+                            </td>
                         </tr>
                     @endforeach
 

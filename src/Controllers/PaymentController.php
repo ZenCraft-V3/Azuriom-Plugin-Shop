@@ -5,11 +5,35 @@ namespace Azuriom\Plugin\Shop\Controllers;
 use Azuriom\Http\Controllers\Controller;
 use Azuriom\Plugin\Shop\Cart\Cart;
 use Azuriom\Plugin\Shop\Models\Gateway;
+use Azuriom\Plugin\Shop\Models\Payment;
 use Azuriom\Plugin\Shop\Payment\PaymentManager;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class PaymentController extends Controller
 {
+
+    public function receipt(Request $request, Payment $payment)
+    {
+        abort_if(! $payment->user->is($request->user()), 403);
+
+        if($payment->gateway_type !== 'stripe' || !Str::startsWith($payment->transaction_id, 'pi_')) {
+            return redirect()->route('shop.profile')
+                ->with('error', trans('shop::messages.payments.no_receipt'));
+        }
+
+        $gateway = Gateway::firstWhere('type', $payment->gateway_type);
+
+        try{
+            return $gateway->paymentMethod()->receipt($payment);
+        } catch (\Exception $e) {
+            report($e);
+
+            return redirect()->route('shop.profile')
+                ->with('error', trans('shop::messages.payments.receipt_error'));
+        }
+    }
+
     public function payment(Request $request)
     {
         $cart = Cart::fromSession($request->session());

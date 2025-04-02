@@ -103,6 +103,8 @@ return [
 
         'empty' => 'No payment methods currently available.',
 
+        'no_receipt' => 'No receipt available for this payment.',
+
         'info' => 'Purchase #:id on :website: :items',
         'subscription' => ':package - Subscription (User #:user)',
         'error' => 'The payment could not be completed, please try again later.',

@@ -81,6 +81,8 @@ Route::prefix('payments')->name('payments.')->group(function () {
 
     Route::get('/{gateway:type}/success', [PaymentController::class, 'success'])->name('success');
     Route::get('/{gateway:type}/failure', [PaymentController::class, 'failure'])->name('failure');
+
+    Route::get('/{payment}/receipt', [PaymentController::class, 'receipt'])->middleware('auth')->name('receipt');
 });
 
 Route::get('/profile', [ProfileController::class, 'index'])->middleware('auth')->name('profile');

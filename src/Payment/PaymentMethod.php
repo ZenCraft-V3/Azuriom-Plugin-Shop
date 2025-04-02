@@ -61,6 +61,16 @@ abstract class PaymentMethod
         throw new InvalidArgumentException('This payment method does not support billing portal management.');
     }
 
+    /**
+     * Return the receipt URL for the given payment.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function receipt(Payment $payment)
+    {
+        throw new InvalidArgumentException('This payment method does not support receipts.');
+    }
+
     public function cancelSubscription(Subscription $subscription): void
     {
         throw new InvalidArgumentException('This payment method does not support subscriptions.');

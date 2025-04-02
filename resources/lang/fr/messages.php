@@ -104,6 +104,8 @@ return [
 
         'empty' => 'Aucun moyen de paiement n\'est disponible actuellement.',
 
+        'no_receipt' => 'Aucun recu n\'est disponible pour ce paiement.',
+
         'info' => 'Achat #:id sur :website: :items',
         'subscription' => ':package - Abonnement (Utilisateur #:user)',
         'error' => 'Le paiement n\'a pas pu être effectué, veuillez réessayer.',

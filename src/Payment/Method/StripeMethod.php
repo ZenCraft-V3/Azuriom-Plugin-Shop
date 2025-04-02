@@ -15,6 +15,8 @@ use Stripe\Checkout\Session;
 use Stripe\Coupon;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\Invoice;
+use Stripe\PaymentIntent as StripePaymentIntent;
+use Stripe\Charge as StripeCharge;
 use Stripe\Stripe;
 use Stripe\Subscription as StripeSubscription;
 use Stripe\BillingPortal\Session as StripeBillingSession;
@@ -141,6 +143,18 @@ class StripeMethod extends PaymentMethod
         $stripeSub = StripeSubscription::retrieve($subscription->subscription_id);
 
         $stripeSub->cancel();
+    }
+
+    public function receipt(Payment $payment)
+    {
+        $this->setup();
+
+        /** @var StripePaymentIntent $paymentIntent */
+        $paymentIntent = StripePaymentIntent::retrieve($payment->transaction_id);
+        /** @var StripeCharge $charge */
+        $charge = StripeCharge::retrieve($paymentIntent->latest_charge);
+
+        return redirect()->away($charge->receipt_url);
     }
 
     public function notification(Request $request, ?string $paymentId)
