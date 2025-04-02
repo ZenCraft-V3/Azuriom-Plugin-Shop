@@ -198,6 +198,45 @@ class StripeMethod extends PaymentMethod
             return response()->noContent();
         }
 
+        // ZenCraft START
+        /**
+         * Handle Stripe subscription updates
+         * Allow us to update the local subscription record when the Stripe subscription is updated
+         * (e.g. canceled, resumed)
+         */
+        if($event->type === 'customer.subscription.updated') {
+            /** @var StripeSubscription $stripeSub */
+            $stripeSub = $event->data->object;
+
+            /** @var Subscription $subscription */
+            $subscription = Subscription::where('subscription_id', $stripeSub->id)->first();
+
+            if ($subscription === null) {
+                Log::warning('Unknown Stripe subscription: '.$stripeSub->id);
+
+                return response()->json(['status' => 'unknown_subscription'], 400);
+            }
+
+            $stripeCanceledAt = $stripeSub->canceled_at;
+
+            if($stripeCanceledAt !== null && $subscription->status !== 'canceled') { // Subscription has been canceled on Stripe
+                $subscription->update([
+                    'ends_at' => $stripeSub->cancel_at,
+                    'status' => 'canceled',
+                    'updated_at' => Carbon::now()
+                ]);
+            }else if($stripeCanceledAt === null && ($stripeSub->status === 'active' || $stripeSub->status === 'trialing') && $subscription->status !== 'active') { // Subscription has been reactivated
+                $subscription->update([
+                    'ends_at' => $stripeSub->current_period_end,
+                    'status' => 'active',
+                    'updated_at' => Carbon::now()
+                ]);
+            }
+
+            return response()->noContent();
+        }
+        // ZenCraft END
+
         return response()->json(['status' => 'unknown_event']);
     }
 
